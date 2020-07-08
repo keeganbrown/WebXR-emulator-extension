@@ -1,9 +1,9 @@
-const port = chrome.runtime.connect(null, {name: 'panel'});
+const port = chrome.runtime.connect(null, { name: 'panel' });
 const tabId = chrome.devtools.inspectedWindow.tabId;
 
 // receive message from contentScript via background
 
-port.onMessage.addListener(message => {
+port.onMessage.addListener((message) => {
   switch (message.action) {
     case 'webxr-startup':
       // notify the poses to sync
@@ -27,7 +27,10 @@ port.onMessage.addListener(message => {
       {
         // @TODO: Make function?
         const objectName = message.objectName;
-        const key = objectName === 'rightController' ? DEVICE.RIGHT_CONTROLLER : DEVICE.LEFT_CONTROLLER;
+        const key =
+          objectName === 'rightController'
+            ? DEVICE.RIGHT_CONTROLLER
+            : DEVICE.LEFT_CONTROLLER;
         const node = assetNodes[key];
         if (!node) {
           return;
@@ -132,7 +135,25 @@ const DEVICE = {
 
 const BUTTON = {
   SELECT: 0,
-  SQUEEZE: 1
+  SQUEEZE: 1,
+  TWO: 2,
+  THUMB: 3,
+  AX: 4,
+  BY: 5
+};
+
+const getButtonsDefaults = (buttonMap) => {
+  const acc = {};
+  for (const key in buttonMap) {
+    if (buttonMap.hasOwnProperty(key)) {
+      acc[buttonMap[key]] = false;
+    }
+  }
+  return acc;
+};
+
+const buttonElementId = (controller, index) => {
+  return controller + index + 'Button';
 };
 
 const ASSET_PATH = {};
@@ -149,12 +170,8 @@ const states = {
   buttonPressed: {},
   immersiveMode: IMMERSIVE_MODE.NONE
 };
-states.buttonPressed[DEVICE.RIGHT_CONTROLLER] = {};
-states.buttonPressed[DEVICE.RIGHT_CONTROLLER][BUTTON.SELECT] = false;
-states.buttonPressed[DEVICE.RIGHT_CONTROLLER][BUTTON.SQUEEZE] = false;
-states.buttonPressed[DEVICE.LEFT_CONTROLLER] = {};
-states.buttonPressed[DEVICE.LEFT_CONTROLLER][BUTTON.SELECT] = false;
-states.buttonPressed[DEVICE.LEFT_CONTROLLER][BUTTON.SQUEEZE] = false;
+states.buttonPressed[DEVICE.RIGHT_CONTROLLER] = getButtonsDefaults(BUTTON);
+states.buttonPressed[DEVICE.LEFT_CONTROLLER] = getButtonsDefaults(BUTTON);
 
 const deviceCapabilities = {};
 deviceCapabilities[DEVICE.HEADSET] = {
@@ -206,7 +223,7 @@ defaultTransforms[DEVICE.TABLET] = {
 
 // renderer
 
-const renderer = new THREE.WebGLRenderer({antialias: true});
+const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(1, 1);
 document.getElementById('renderComponent').appendChild(renderer.domElement);
@@ -266,18 +283,30 @@ const createTransformControls = (target, onChange) => {
   controls.enabled = false;
   controls.visible = false;
 
-  controls.addEventListener('mouseDown', () => {
-    orbitControls.enabled = false;
-  }, false);
+  controls.addEventListener(
+    'mouseDown',
+    () => {
+      orbitControls.enabled = false;
+    },
+    false
+  );
 
-  controls.addEventListener('mouseUp', () => {
-    orbitControls.enabled = true;
-  }, false);
+  controls.addEventListener(
+    'mouseUp',
+    () => {
+      orbitControls.enabled = true;
+    },
+    false
+  );
 
-  controls.addEventListener('change', () => {
-    onChange();
-    render();
-  }, false);
+  controls.addEventListener(
+    'change',
+    () => {
+      onChange();
+      render();
+    },
+    false
+  );
 
   return controls;
 };
@@ -300,7 +329,7 @@ const setupTransformControlsMode = (controls, capabilities) => {
 // device assets
 
 const loadHeadsetAsset = () => {
-  new THREE.OBJLoader().load(ASSET_PATH[DEVICE.HEADSET], headset => {
+  new THREE.OBJLoader().load(ASSET_PATH[DEVICE.HEADSET], (headset) => {
     const parent = new THREE.Object3D();
     parent.position.copy(defaultTransforms[DEVICE.HEADSET].position);
     parent.rotation.copy(defaultTransforms[DEVICE.HEADSET].rotation);
@@ -323,7 +352,7 @@ const loadHeadsetAsset = () => {
 };
 
 const loadControllersAsset = (loadRight, loadLeft) => {
-  new THREE.GLTFLoader().load(ASSET_PATH[DEVICE.CONTROLLER], gltf => {
+  new THREE.GLTFLoader().load(ASSET_PATH[DEVICE.CONTROLLER], (gltf) => {
     const baseController = gltf.scene;
     baseController.scale.multiplyScalar(6);
 
@@ -356,9 +385,12 @@ const loadControllersAsset = (loadRight, loadLeft) => {
       // @TODO: Simplify
       let keyForDefaultTransform = key;
       if (states.immersiveMode === IMMERSIVE_MODE.AR) {
-        keyForDefaultTransform = key === DEVICE.RIGHT_CONTROLLER ? DEVICE.POINTER :
-              key === DEVICE.LEFT_CONTROLLER ? DEVICE.TABLET :
-              key;
+        keyForDefaultTransform =
+          key === DEVICE.RIGHT_CONTROLLER
+            ? DEVICE.POINTER
+            : key === DEVICE.LEFT_CONTROLLER
+            ? DEVICE.TABLET
+            : key;
       }
 
       parent.position.copy(defaultTransforms[keyForDefaultTransform].position);
@@ -374,8 +406,10 @@ const loadControllersAsset = (loadRight, loadLeft) => {
         notifyInputPoseChange(key, parent);
       };
 
-      const checkboxId = key === DEVICE.RIGHT_CONTROLLER ?
-        'rightControllerCheckbox' : 'leftControllerCheckbox';
+      const checkboxId =
+        key === DEVICE.RIGHT_CONTROLLER
+          ? 'rightControllerCheckbox'
+          : 'leftControllerCheckbox';
 
       const controls = createTransformControls(parent, onChange);
       scene.add(controls);
@@ -399,9 +433,11 @@ const updateAssetNodes = (deviceDefinition) => {
   // @TODO: Move more proper place to check?
   const modes = deviceDefinition.modes;
   // @TODO: What if the device supports both immersive-vr and immersive-ar?
-  states.immersiveMode = modes.includes('immersive-ar') ? IMMERSIVE_MODE.AR :
-                         modes.includes('immersive-vr') ? IMMERSIVE_MODE.VR :
-                         IMMERSIVE_MODE.NONE;
+  states.immersiveMode = modes.includes('immersive-ar')
+    ? IMMERSIVE_MODE.AR
+    : modes.includes('immersive-vr')
+    ? IMMERSIVE_MODE.VR
+    : IMMERSIVE_MODE.NONE;
 
   // Workaround for a bug in Three.js r110 that
   // default material can be shared across GLTFLoader.
@@ -411,13 +447,11 @@ const updateAssetNodes = (deviceDefinition) => {
   // To resolve the issue, explicilty reseting the color here.
   // @TODO: Remove this workaround if the issue is fixed in Three.js side.
   if (assetNodes[DEVICE.RIGHT_CONTROLLER]) {
-    states.buttonPressed[DEVICE.RIGHT_CONTROLLER][BUTTON.SELECT] = false;
-    states.buttonPressed[DEVICE.RIGHT_CONTROLLER][BUTTON.SQUEEZE] = false;
+    states.buttonPressed[DEVICE.RIGHT_CONTROLLER] = getButtonsDefaults(BUTTON);
     updateControllerColor(DEVICE.RIGHT_CONTROLLER);
   }
   if (assetNodes[DEVICE.LEFT_CONTROLLER]) {
-    states.buttonPressed[DEVICE.LEFT_CONTROLLER][BUTTON.SELECT] = false;
-    states.buttonPressed[DEVICE.LEFT_CONTROLLER][BUTTON.SQUEEZE] = false;
+    states.buttonPressed[DEVICE.LEFT_CONTROLLER] = getButtonsDefaults(BUTTON);
     updateControllerColor(DEVICE.LEFT_CONTROLLER);
   }
 
@@ -452,29 +486,49 @@ const updateAssetNodes = (deviceDefinition) => {
   document.getElementById('leftControllerComponent').style.display = 'none';
   document.getElementById('resetPoseButton').style.display = 'none';
   document.getElementById('exitButton').style.display = 'none';
-  document.getElementById('rightSelectButton').style.display = 'none';
-  document.getElementById('leftSelectButton').style.display = 'none';
-  document.getElementById('rightSqueezeButton').style.display = 'none';
-  document.getElementById('leftSqueezeButton').style.display = 'none';
-  updateTriggerButtonColor(DEVICE.RIGHT_CONTROLLER, BUTTON.SELECT, false);
-  updateTriggerButtonColor(DEVICE.RIGHT_CONTROLLER, BUTTON.SQUEEZE, false);
-  updateTriggerButtonColor(DEVICE.LEFT_CONTROLLER, BUTTON.SELECT, false);
-  updateTriggerButtonColor(DEVICE.LEFT_CONTROLLER, BUTTON.SQUEEZE, false);
+
+  [
+    { side: 'right', id: DEVICE.RIGHT_CONTROLLER },
+    { side: 'left', id: DEVICE.LEFT_CONTROLLER }
+  ].forEach((controllerObj) => {
+    for (const buttonKey in BUTTON) {
+      if (BUTTON.hasOwnProperty(buttonKey)) {
+        const buttonID = BUTTON[buttonKey];
+        document.getElementById(
+          buttonElementId(controllerObj.side, buttonID)
+        ).style.display = 'none';
+        updateTriggerButtonColor(controllerObj.id, buttonID, false);
+      }
+    }
+  });
 
   // secondly load new assets and enable necessary panel controls
 
-  const hasImmersiveVR = deviceDefinition.modes && !! deviceDefinition.modes.includes('immersive-vr');
-  const hasHeadset = !! deviceDefinition.headset;
-  const hasRightController = deviceDefinition.controllers && deviceDefinition.controllers.length > 0;
-  const hasLeftController = deviceDefinition.controllers && deviceDefinition.controllers.length > 1;
+  const hasImmersiveVR =
+    deviceDefinition.modes && !!deviceDefinition.modes.includes('immersive-vr');
+  const hasHeadset = !!deviceDefinition.headset;
+  const hasRightController =
+    deviceDefinition.controllers && deviceDefinition.controllers.length > 0;
+  const hasLeftController =
+    deviceDefinition.controllers && deviceDefinition.controllers.length > 1;
 
-  deviceCapabilities[DEVICE.HEADSET].hasPosition = hasHeadset && deviceDefinition.headset.hasPosition;
-  deviceCapabilities[DEVICE.HEADSET].hasRotation = hasHeadset && deviceDefinition.headset.hasRotation;
-  deviceCapabilities[DEVICE.CONTROLLER].hasPosition = hasRightController && deviceDefinition.controllers[0].hasPosition;
-  deviceCapabilities[DEVICE.CONTROLLER].hasRotation = hasRightController && deviceDefinition.controllers[0].hasRotation;
-  deviceCapabilities[DEVICE.CONTROLLER].hasSqueezeButton = hasRightController && deviceDefinition.controllers[0].hasSqueezeButton;
+  deviceCapabilities[DEVICE.HEADSET].hasPosition =
+    hasHeadset && deviceDefinition.headset.hasPosition;
+  deviceCapabilities[DEVICE.HEADSET].hasRotation =
+    hasHeadset && deviceDefinition.headset.hasRotation;
+  deviceCapabilities[DEVICE.CONTROLLER].hasPosition =
+    hasRightController && deviceDefinition.controllers[0].hasPosition;
+  deviceCapabilities[DEVICE.CONTROLLER].hasRotation =
+    hasRightController && deviceDefinition.controllers[0].hasRotation;
+  deviceCapabilities[DEVICE.CONTROLLER].hasSqueezeButton =
+    hasRightController && deviceDefinition.controllers[0].hasSqueezeButton;
+  deviceCapabilities[DEVICE.CONTROLLER].buttons =
+    hasRightController && deviceDefinition.controllers[0].buttons
+      ? deviceDefinition.controllers[0].buttons
+      : [];
 
-  const hasPosition = deviceCapabilities[DEVICE.HEADSET].hasPosition ||
+  const hasPosition =
+    deviceCapabilities[DEVICE.HEADSET].hasPosition ||
     deviceCapabilities[DEVICE.CONTROLLER].hasPosition;
 
   if (hasImmersiveVR) {
@@ -494,20 +548,24 @@ const updateAssetNodes = (deviceDefinition) => {
   if (hasRightController) {
     document.getElementById('rightControllerComponent').style.display = 'flex';
     if (hasImmersiveVR) {
-      document.getElementById('rightSelectButton').style.display = '';
+      document.getElementById('right0Button').style.display = '';
     }
-    if (deviceCapabilities[DEVICE.CONTROLLER].hasSqueezeButton) {
-      document.getElementById('rightSqueezeButton').style.display = '';
+    if (deviceCapabilities[DEVICE.CONTROLLER].buttons.length) {
+      deviceCapabilities[DEVICE.CONTROLLER].buttons.forEach((_, buttonIndex) => {
+        document.getElementById(buttonElementId('right', buttonIndex)).style.display = '';
+      });
     }
   }
 
   if (hasLeftController) {
     document.getElementById('leftControllerComponent').style.display = 'flex';
     if (hasImmersiveVR) {
-      document.getElementById('leftSelectButton').style.display = '';
+      document.getElementById('left0Button').style.display = '';
     }
-    if (deviceCapabilities[DEVICE.CONTROLLER].hasSqueezeButton) {
-      document.getElementById('leftSqueezeButton').style.display = '';
+    if (deviceCapabilities[DEVICE.CONTROLLER].buttons.length) {
+      deviceCapabilities[DEVICE.CONTROLLER].buttons.forEach((_, buttonIndex) => {
+        document.getElementById(buttonElementId('left', buttonIndex)).style.display = '';
+      });
     }
   }
 
@@ -520,8 +578,11 @@ const updateAssetNodes = (deviceDefinition) => {
 
 const updateControllerColor = (key) => {
   const node = assetNodes[key];
-  const pressed = states.buttonPressed[key][BUTTON.SELECT] || states.buttonPressed[key][BUTTON.SQUEEZE];
-  node.traverse(object => {
+  const pressed = Object.values(states.buttonPressed[key]).reduce(
+    (acc, buttonState) => (buttonState ? buttonState : acc),
+    false
+  );
+  node.traverse((object) => {
     if (!object.material) {
       return;
     }
@@ -556,7 +617,7 @@ let mousedownTime = null;
 let intersectKey = null;
 const thresholdTime = 300;
 
-const raycast = event => {
+const raycast = (event) => {
   const rect = renderer.domElement.getBoundingClientRect();
   // left-top (0, 0), right-bottom (1, 1)
   const point = {
@@ -575,7 +636,7 @@ const raycast = event => {
   return raycaster.intersectObjects(targetObjects, true);
 };
 
-const getNearestIntersectedObjectKey = event => {
+const getNearestIntersectedObjectKey = (event) => {
   // @TODO: Optimize
   const intersects = raycast(event);
   if (intersects.length === 0) {
@@ -583,7 +644,7 @@ const getNearestIntersectedObjectKey = event => {
   }
   const intersect = intersects[0];
   let target = null;
-  const check = object => {
+  const check = (object) => {
     for (const key in assetNodes) {
       const node = assetNodes[key];
       if (!node) {
@@ -599,24 +660,32 @@ const getNearestIntersectedObjectKey = event => {
   return target;
 };
 
-renderer.domElement.addEventListener('mousedown', event => {
-  intersectKey = getNearestIntersectedObjectKey(event);
-  mousedownTime = performance.now();
-}, false);
+renderer.domElement.addEventListener(
+  'mousedown',
+  (event) => {
+    intersectKey = getNearestIntersectedObjectKey(event);
+    mousedownTime = performance.now();
+  },
+  false
+);
 
-renderer.domElement.addEventListener('mouseup', event => {
-  if (intersectKey === null) {
-    return;
-  }
-  const currentTime = performance.now();
-  if (currentTime - mousedownTime < thresholdTime) {
-    toggleControlMode(intersectKey);
-    // We add event listener to transformControls mouseUp event to set orbitControls.enabled true.
-    // But if disabling transformControls, its mouseUp event won't be fired.
-    // Then setting orbitControls.enabled true here as workaround.
-    orbitControls.enabled = true;
-  }
-}, false);
+renderer.domElement.addEventListener(
+  'mouseup',
+  (event) => {
+    if (intersectKey === null) {
+      return;
+    }
+    const currentTime = performance.now();
+    if (currentTime - mousedownTime < thresholdTime) {
+      toggleControlMode(intersectKey);
+      // We add event listener to transformControls mouseUp event to set orbitControls.enabled true.
+      // But if disabling transformControls, its mouseUp event won't be fired.
+      // Then setting orbitControls.enabled true here as workaround.
+      orbitControls.enabled = true;
+    }
+  },
+  false
+);
 
 // event handlers
 
@@ -629,24 +698,33 @@ const updateDevicePropertyContent = (positionId, rotationId, position, rotation)
 
 const updateHeadsetPropertyComponent = () => {
   const headset = assetNodes[DEVICE.HEADSET];
-  if (!headset) { return; }
-  updateDevicePropertyContent('headsetPosition', 'headsetRotation',
-    headset.position, headset.rotation);
+  if (!headset) {
+    return;
+  }
+  updateDevicePropertyContent(
+    'headsetPosition',
+    'headsetRotation',
+    headset.position,
+    headset.rotation
+  );
 };
 
 const updateControllerPropertyComponent = (key) => {
   const controller = assetNodes[key];
-  if (!controller) { return; }
+  if (!controller) {
+    return;
+  }
   updateDevicePropertyContent(
     key === DEVICE.RIGHT_CONTROLLER ? 'rightControllerPosition' : 'leftControllerPosition',
     key === DEVICE.RIGHT_CONTROLLER ? 'rightControllerRotation' : 'leftControllerRotation',
-    controller.position, controller.rotation
+    controller.position,
+    controller.rotation
   );
 };
 
 const updateTriggerButtonColor = (key, buttonKey, pressed) => {
   let buttonId = key === DEVICE.RIGHT_CONTROLLER ? 'right' : 'left';
-  buttonId += buttonKey === BUTTON.SELECT ? 'Select' : 'Squeeze';
+  buttonId += buttonKey;
   buttonId += 'Button';
   const button = document.getElementById(buttonId);
   button.classList.toggle('pressed', pressed);
@@ -660,32 +738,44 @@ for (const component of document.getElementsByClassName('device-property-compone
   const title = component.getElementsByClassName('title-bar')[0];
   const content = component.getElementsByClassName('device-property-content')[0];
   const icon = title.getElementsByClassName('icon')[0];
-  title.addEventListener('click', event => {
-    if (content.style.display === 'none') {
-      icon.innerHTML = '&#9660;';
-      content.style.display = 'flex';
-    } else {
-      icon.innerHTML = '&#9654;';
-      content.style.display = 'none';
-    }
-  }, false);
+  title.addEventListener(
+    'click',
+    (event) => {
+      if (content.style.display === 'none') {
+        icon.innerHTML = '&#9660;';
+        content.style.display = 'flex';
+      } else {
+        icon.innerHTML = '&#9654;';
+        content.style.display = 'none';
+      }
+    },
+    false
+  );
 }
 
-document.getElementById('devicePropertiesExpandIcon').addEventListener('click', event => {
-  const component = document.getElementById('devicePropertiesComponent');
-  if (component.style.display === 'none') {
-    component.style.display = 'flex';
-    event.target.innerHTML = '&#9660;';
-  } else {
-    component.style.display = 'none';
-    event.target.innerHTML = '&#9654;';
-  }
-  onResize();
-}, false);
+document.getElementById('devicePropertiesExpandIcon').addEventListener(
+  'click',
+  (event) => {
+    const component = document.getElementById('devicePropertiesComponent');
+    if (component.style.display === 'none') {
+      component.style.display = 'flex';
+      event.target.innerHTML = '&#9660;';
+    } else {
+      component.style.display = 'none';
+      event.target.innerHTML = '&#9654;';
+    }
+    onResize();
+  },
+  false
+);
 
-window.addEventListener('resize', event => {
-  onResize();
-}, false);
+window.addEventListener(
+  'resize',
+  (event) => {
+    onResize();
+  },
+  false
+);
 
 const toggleControlMode = (key) => {
   const controls = transformControls[key];
@@ -703,8 +793,10 @@ const toggleControlMode = (key) => {
     controls.enabled = false;
     controls.visible = false;
   }
-  setupTransformControlsMode(controls,
-    deviceCapabilities[key === DEVICE.HEADSET ? key : DEVICE.CONTROLLER]);
+  setupTransformControlsMode(
+    controls,
+    deviceCapabilities[key === DEVICE.HEADSET ? key : DEVICE.CONTROLLER]
+  );
   render();
 };
 
@@ -716,56 +808,77 @@ const toggleButtonPressed = (key, buttonKey) => {
   updateControllerColor(key);
 };
 
-document.getElementById('rightSelectButton').addEventListener('click', event => {
-  toggleButtonPressed(DEVICE.RIGHT_CONTROLLER, BUTTON.SELECT);
-}, false);
-
-document.getElementById('leftSelectButton').addEventListener('click', event => {
-  toggleButtonPressed(DEVICE.LEFT_CONTROLLER, BUTTON.SELECT);
-}, false);
-
-document.getElementById('rightSqueezeButton').addEventListener('click', event => {
-  toggleButtonPressed(DEVICE.RIGHT_CONTROLLER, BUTTON.SQUEEZE);
-}, false);
-
-document.getElementById('leftSqueezeButton').addEventListener('click', event => {
-  toggleButtonPressed(DEVICE.LEFT_CONTROLLER, BUTTON.SQUEEZE);
-}, false);
-
-document.getElementById('resetPoseButton').addEventListener('click', event => {
-  for (const key in assetNodes) {
-    const device = assetNodes[key];
-
-    if (!device) {
-      continue;
+document.getElementById('rightControllerComponent').addEventListener(
+  'click',
+  (event) => {
+    if (event.target && event.target.dataset && event.target.dataset.buttonKey) {
+      toggleButtonPressed(
+        DEVICE.RIGHT_CONTROLLER,
+        parseInt(event.target.dataset.buttonKey, 10)
+      );
     }
+  },
+  false
+);
 
-    let defaultTransformKey = key;
-    // @TODO: Simplify
-    if (states.immersiveMode === IMMERSIVE_MODE.AR) {
-      defaultTransformKey = key === DEVICE.RIGHT_CONTROLLER ? DEVICE.POINTER :
-                            key === DEVICE.LEFT_CONTROLLER ? DEVICE.TABLET :
-                            key;
+document.getElementById('leftControllerComponent').addEventListener(
+  'click',
+  (event) => {
+    if (event.target && event.target.dataset && event.target.dataset.buttonKey) {
+      toggleButtonPressed(
+        DEVICE.LEFT_CONTROLLER,
+        parseInt(event.target.dataset.buttonKey, 10)
+      );
     }
-    device.position.copy(defaultTransforms[defaultTransformKey].position);
-    device.rotation.copy(defaultTransforms[defaultTransformKey].rotation);
-  }
-  updateHeadsetPropertyComponent();
-  updateControllerPropertyComponent(DEVICE.RIGHT_CONTROLLER);
-  updateControllerPropertyComponent(DEVICE.LEFT_CONTROLLER);
-  notifyPoses();
-  render();
-}, false);
+  },
+  false
+);
 
-document.getElementById('exitButton').addEventListener('click', event => {
-  notifyExitImmersive();
-}, false);
+document.getElementById('resetPoseButton').addEventListener(
+  'click',
+  (event) => {
+    for (const key in assetNodes) {
+      const device = assetNodes[key];
+
+      if (!device) {
+        continue;
+      }
+
+      let defaultTransformKey = key;
+      // @TODO: Simplify
+      if (states.immersiveMode === IMMERSIVE_MODE.AR) {
+        defaultTransformKey =
+          key === DEVICE.RIGHT_CONTROLLER
+            ? DEVICE.POINTER
+            : key === DEVICE.LEFT_CONTROLLER
+            ? DEVICE.TABLET
+            : key;
+      }
+      device.position.copy(defaultTransforms[defaultTransformKey].position);
+      device.rotation.copy(defaultTransforms[defaultTransformKey].rotation);
+    }
+    updateHeadsetPropertyComponent();
+    updateControllerPropertyComponent(DEVICE.RIGHT_CONTROLLER);
+    updateControllerPropertyComponent(DEVICE.LEFT_CONTROLLER);
+    notifyPoses();
+    render();
+  },
+  false
+);
+
+document.getElementById('exitButton').addEventListener(
+  'click',
+  (event) => {
+    notifyExitImmersive();
+  },
+  false
+);
 
 // copy values to clipboard on click
-const onTransformFieldClick = event => {
+const onTransformFieldClick = (event) => {
   const el = event.target;
   navigator.clipboard.writeText(el.innerHTML.split(' ').join(', '));
-}
+};
 
 for (const field of document.getElementsByClassName('value')) {
   field.addEventListener('click', onTransformFieldClick, false);
@@ -777,80 +890,82 @@ for (const field of document.getElementsByClassName('value')) {
 // 2. set up dom elements from it
 // 3. load configuration from storage and load assets
 
-ConfigurationManager.createFromJsonFile('src/devices.json').then(manager => {
-  const deviceSelect = document.getElementById('deviceSelect');
-  const stereoCheckbox = document.getElementById('stereoCheckbox');
+ConfigurationManager.createFromJsonFile('src/devices.json')
+  .then((manager) => {
+    const deviceSelect = document.getElementById('deviceSelect');
+    const stereoCheckbox = document.getElementById('stereoCheckbox');
 
-  // set up devices select element
+    // set up devices select element
 
-  // Assuming the order of Object.keys() isn't predictable.
-  // Alphabetical sort first and then place 'None' at top of the list.
-  const devices = manager.devices;
-  const deviceKeys = Object.keys(devices).sort();
-  if (deviceKeys.includes('None')) {
-    deviceKeys.splice(deviceKeys.indexOf('None'), 1);
-    deviceKeys.unshift('None');
-  }
-  for (const key of deviceKeys) {
-    const deviceDefinition = devices[key];
-    const option = document.createElement('option');
-    option.text = deviceDefinition.name;
-    option.value = key;
-    if (key === manager.defaultDeviceKey) {
-      option.selected = true;
+    // Assuming the order of Object.keys() isn't predictable.
+    // Alphabetical sort first and then place 'None' at top of the list.
+    const devices = manager.devices;
+    const deviceKeys = Object.keys(devices).sort();
+    if (deviceKeys.includes('None')) {
+      deviceKeys.splice(deviceKeys.indexOf('None'), 1);
+      deviceKeys.unshift('None');
     }
-    deviceSelect.add(option);
-  }
-
-  // setup stereo effect checkbox element
-
-  stereoCheckbox.checked = manager.defaultStereoEffect;
-
-  // update assets and store configuration if selects are changed
-
-  const onChange = () => {
-    const deviceKey = deviceSelect.children[deviceSelect.selectedIndex].value;
-    const stereoEffect = stereoCheckbox.checked;
-
-    const deviceKeyIsUpdated = manager.updateDeviceKey(deviceKey);
-    const stereoEffectIsUpdated = manager.updateStereoEffect(stereoEffect);
-
-    if (deviceKeyIsUpdated || stereoEffectIsUpdated) {
-      manager.storeToStorage().then(storedValues => {
-        // console.log(storedValues);
-      });
-    }
-
-    if (deviceKeyIsUpdated) {
-      notifyDeviceChange(manager.deviceDefinition);
-      updateAssetNodes(manager.deviceDefinition);
-    }
-
-    if (stereoEffectIsUpdated) {
-      notifyStereoEffectChange(stereoEffect);
-    }
-  };
-
-  deviceSelect.addEventListener('change', onChange);
-  stereoCheckbox.addEventListener('change', onChange);
-
-  // load configuration and then load assets
-
-  manager.loadFromStorage().then(result => {
-    const deviceKey = manager.deviceKey;
-    const stereoEffect = manager.stereoEffect;
-
-    for (let index = 0; index < deviceSelect.children.length; index++) {
-      const option = deviceSelect.children[index];
-      if (option.value === deviceKey) {
-        deviceSelect.selectedIndex = index;
-        break;
+    for (const key of deviceKeys) {
+      const deviceDefinition = devices[key];
+      const option = document.createElement('option');
+      option.text = deviceDefinition.name;
+      option.value = key;
+      if (key === manager.defaultDeviceKey) {
+        option.selected = true;
       }
+      deviceSelect.add(option);
     }
 
-    stereoCheckbox.checked = stereoEffect;
-    updateAssetNodes(manager.deviceDefinition);
+    // setup stereo effect checkbox element
+
+    stereoCheckbox.checked = manager.defaultStereoEffect;
+
+    // update assets and store configuration if selects are changed
+
+    const onChange = () => {
+      const deviceKey = deviceSelect.children[deviceSelect.selectedIndex].value;
+      const stereoEffect = stereoCheckbox.checked;
+
+      const deviceKeyIsUpdated = manager.updateDeviceKey(deviceKey);
+      const stereoEffectIsUpdated = manager.updateStereoEffect(stereoEffect);
+
+      if (deviceKeyIsUpdated || stereoEffectIsUpdated) {
+        manager.storeToStorage().then((storedValues) => {
+          // console.log(storedValues);
+        });
+      }
+
+      if (deviceKeyIsUpdated) {
+        notifyDeviceChange(manager.deviceDefinition);
+        updateAssetNodes(manager.deviceDefinition);
+      }
+
+      if (stereoEffectIsUpdated) {
+        notifyStereoEffectChange(stereoEffect);
+      }
+    };
+
+    deviceSelect.addEventListener('change', onChange);
+    stereoCheckbox.addEventListener('change', onChange);
+
+    // load configuration and then load assets
+
+    manager.loadFromStorage().then((result) => {
+      const deviceKey = manager.deviceKey;
+      const stereoEffect = manager.stereoEffect;
+
+      for (let index = 0; index < deviceSelect.children.length; index++) {
+        const option = deviceSelect.children[index];
+        if (option.value === deviceKey) {
+          deviceSelect.selectedIndex = index;
+          break;
+        }
+      }
+
+      stereoCheckbox.checked = stereoEffect;
+      updateAssetNodes(manager.deviceDefinition);
+    });
+  })
+  .catch((error) => {
+    console.error(error);
   });
-}).catch(error => {
-  console.error(error);
-});

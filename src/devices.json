@@ -7,18 +7,13 @@
     "None": {
       "id": "None",
       "name": "None",
-      "modes": [
-        "inline"
-      ]
+      "modes": ["inline"]
     },
-    "Google cardboard" : {
+    "Google cardboard": {
       "id": "Google cardboard",
       "name": "Google cardboard",
-      "modes": [
-        "inline",
-        "immersive-vr"
-      ],
-      "headset" : {
+      "modes": ["inline", "immersive-vr"],
+      "headset": {
         "hasPosition": false,
         "hasRotation": true
       }
@@ -26,10 +21,7 @@
     "HTC Vive": {
       "id": "HTC Vive",
       "name": "HTC Vive",
-      "modes": [
-        "inline",
-        "immersive-vr"
-      ],
+      "modes": ["inline", "immersive-vr"],
       "headset": {
         "hasPosition": true,
         "hasRotation": true
@@ -42,7 +34,8 @@
           "primarySqueezeButtonIndex": 1,
           "hasPosition": true,
           "hasRotation": true,
-          "hasSqueezeButton": true
+          "hasSqueezeButton": true,
+          "buttons": ["trigger", "grip"]
         },
         {
           "id": "OpenVR Gamepad",
@@ -51,17 +44,15 @@
           "primarySqueezeButtonIndex": 1,
           "hasPosition": true,
           "hasRotation": true,
-          "hasSqueezeButton": true
+          "hasSqueezeButton": true,
+          "buttons": ["trigger", "grip"]
         }
       ]
     },
     "Oculus Go": {
       "id": "Oculus Go",
       "name": "Oculus Go",
-      "modes": [
-        "inline",
-        "immersive-vr"
-      ],
+      "modes": ["inline", "immersive-vr"],
       "headset": {
         "hasPosition": false,
         "hasRotation": true
@@ -73,17 +64,15 @@
           "primaryButtonIndex": 0,
           "hasPosition": false,
           "hasRotation": true,
-          "hasSqueezeButton": false
+          "hasSqueezeButton": false,
+          "buttons": ["trigger", "grip"]
         }
       ]
     },
     "Oculus Quest": {
       "id": "Oculus Quest",
       "name": "Oculus Quest",
-      "modes": [
-        "inline",
-        "immersive-vr"
-      ],
+      "modes": ["inline", "immersive-vr"],
       "headset": {
         "hasPosition": true,
         "hasRotation": true
@@ -96,7 +85,8 @@
           "primarySqueezeButtonIndex": 1,
           "hasPosition": true,
           "hasRotation": true,
-          "hasSqueezeButton": true
+          "hasSqueezeButton": true,
+          "buttons": ["trigger", "grip", false, "thumbstick", "abutton", "bbutton"]
         },
         {
           "id": "Oculus Touch (Left)",
@@ -105,20 +95,16 @@
           "primarySqueezeButtonIndex": 1,
           "hasPosition": true,
           "hasRotation": true,
-          "hasSqueezeButton": true
+          "hasSqueezeButton": true,
+          "buttons": ["trigger", "grip", false, "thumbstick", "xbutton", "ybutton"]
         }
       ]
     },
     "Samsung Galaxy S8+ (AR)": {
       "id": "Samsung Galaxy S8+ (AR)",
       "name": "Samsung Galaxy S8+ (AR)",
-      "modes": [
-        "inline",
-        "immersive-ar"
-      ],
-      "features": [
-        "hit-test"
-      ],
+      "modes": ["inline", "immersive-ar"],
+      "features": ["hit-test"],
       "headset": {
         "hasPosition": true,
         "hasRotation": true
@@ -128,13 +114,15 @@
           "buttonNum": 1,
           "primaryButtonIndex": 0,
           "hasPosition": true,
-          "hasRotation": true
+          "hasRotation": true,
+          "buttons": ["trigger"]
         },
         {
           "buttonNum": 1,
           "primaryButtonIndex": 0,
           "hasPosition": true,
-          "hasRotation": true
+          "hasRotation": true,
+          "buttons": ["trigger"]
         }
       ],
       "resolution": {
@@ -150,10 +138,7 @@
     "Samsung Gear VR": {
       "id": "Samsung Gear VR",
       "name": "Samsung Gear VR",
-      "modes": [
-        "inline",
-        "immersive-vr"
-      ],
+      "modes": ["inline", "immersive-vr"],
       "headset": {
         "hasPosition": false,
         "hasRotation": true
@@ -164,7 +149,8 @@
           "buttonNum": 3,
           "primaryButtonIndex": 0,
           "hasPosition": false,
-          "hasRotation": true
+          "hasRotation": true,
+          "buttons": ["trigger"]
         }
       ]
     }

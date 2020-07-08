@@ -1,7 +1,13 @@
 <html lang="en">
   <head>
-    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-    <link href="https://fonts.googleapis.com/css?family=Roboto+Mono&display=swap" rel="stylesheet">
+    <meta
+      name="viewport"
+      content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
+    />
+    <link
+      href="https://fonts.googleapis.com/css?family=Roboto+Mono&display=swap"
+      rel="stylesheet"
+    />
     <style>
       body {
         margin: 0;
@@ -26,7 +32,7 @@
         cursor: pointer;
       }
 
-      input[type=checkbox] {
+      input[type='checkbox'] {
         transform: scale(0.8);
         -moz-transform: scale(0.8);
         -webkit-transform: scale(0.8);
@@ -52,8 +58,9 @@
         border-left: 1px solid #ddd;
       }
 
-      .device-property-component {
-        border-bottom: 1px solid #ddd;
+      .device-properties-wrapper {
+        height: 100vh;
+        overflow-y: auto;
       }
 
       .device-property-content {
@@ -74,6 +81,7 @@
         border-color: #ddd;
         align-items: center;
         padding: 0 22px;
+        position: relative;
       }
 
       .device-properties-component .title-bar {
@@ -119,7 +127,8 @@
         border-top: 1px solid #ddd;
       }
 
-      .key, .value {
+      .key,
+      .value {
         font-family: 'Roboto Mono', monospace;
       }
 
@@ -147,7 +156,9 @@
     <div class="component main-component">
       <div class="title-bar">
         <select id="deviceSelect"></select>
-        <label id="stereoEffectLabel"><input id="stereoCheckbox" type="checkbox" checked>Stereo effect</label>
+        <label id="stereoEffectLabel"
+          ><input id="stereoCheckbox" type="checkbox" checked />Stereo effect</label
+        >
         <span id="devicePropertiesExpandIcon" class="item-left icon">&#9660;</span>
       </div>
       <div id="renderComponent" class="component main-component"></div>
@@ -156,30 +167,87 @@
         <button id="exitButton">Exit immersive</button>
       </div>
     </div>
-    <div id="devicePropertiesComponent" class="component device-properties-component">
+    <div
+      id="devicePropertiesComponent"
+      class="component device-properties-component device-properties-wrapper"
+    >
       <div id="headsetComponent" class="component device-property-component">
         <div class="title-bar"><span class="icon">&#9660;</span>Headset</div>
         <div class="component device-property-content">
-          <div><span class="key">position:</span> <span class="value" id="headsetPosition"></span></div>
-          <div><span class="key">rotation:</span> <span class="value" id="headsetRotation"></span></div>
+          <div>
+            <span class="key">position:</span>
+            <span class="value" id="headsetPosition"></span>
+          </div>
+          <div>
+            <span class="key">rotation:</span>
+            <span class="value" id="headsetRotation"></span>
+          </div>
         </div>
       </div>
       <div id="rightControllerComponent" class="component device-property-component">
         <div class="title-bar"><span class="icon">&#9660;</span>Right controller</div>
         <div class="component device-property-content">
-          <div><span class="key">position:</span> <span class="value" id="rightControllerPosition"></span></div>
-          <div><span class="key">rotation:</span> <span class="value" id="rightControllerRotation"></span></div>
-          <div><button class="trigger-button" id="rightSelectButton">select button</button></div>
-          <div><button class="trigger-button" id="rightSqueezeButton">squeeze button</button></div>
+          <div>
+            <span class="key">position:</span>
+            <span class="value" id="rightControllerPosition"></span>
+          </div>
+          <div>
+            <span class="key">rotation:</span>
+            <span class="value" id="rightControllerRotation"></span>
+          </div>
+          <div>
+            <button class="trigger-button" id="right0Button" data-button-key="0">
+              select button
+            </button>
+            <button class="trigger-button" id="right1Button" data-button-key="1">
+              squeeze button
+            </button>
+            <button class="trigger-button" id="right2Button" data-button-key="2">
+              2 button
+            </button>
+            <button class="trigger-button" id="right3Button" data-button-key="3">
+              thumbstick button
+            </button>
+            <button class="trigger-button" id="right4Button" data-button-key="4">
+              A button
+            </button>
+            <button class="trigger-button" id="right5Button" data-button-key="5">
+              B button
+            </button>
+          </div>
         </div>
       </div>
       <div id="leftControllerComponent" class="component device-property-component">
         <div class="title-bar"><span class="icon">&#9660;</span>Left controller</div>
         <div class="component device-property-content">
-          <div><span class="key">position:</span> <span class="value" id="leftControllerPosition"></span></div>
-          <div><span class="key">rotation:</span> <span class="value" id="leftControllerRotation"></span></div>
-          <div><button class="trigger-button" id="leftSelectButton">select button</button></div>
-          <div><button class="trigger-button" id="leftSqueezeButton">squeeze button</button></div>
+          <div>
+            <span class="key">position:</span>
+            <span class="value" id="leftControllerPosition"></span>
+          </div>
+          <div>
+            <span class="key">rotation:</span>
+            <span class="value" id="leftControllerRotation"></span>
+          </div>
+          <div>
+            <button class="trigger-button" id="left0Button" data-button-key="0">
+              select button
+            </button>
+            <button class="trigger-button" id="left1Button" data-button-key="1">
+              squeeze button
+            </button>
+            <button class="trigger-button" id="left2Button" data-button-key="2">
+              2 button
+            </button>
+            <button class="trigger-button" id="left3Button" data-button-key="3">
+              thumbstick button
+            </button>
+            <button class="trigger-button" id="left4Button" data-button-key="4">
+              X button
+            </button>
+            <button class="trigger-button" id="left5Button" data-button-key="5">
+              Y button
+            </button>
+          </div>
         </div>
       </div>
     </div>
